@@ -1,0 +1,158 @@
+services:
+  # Prefect for orchestration
+  prefect-server:
+    image: prefecthq/server:latest
+    container_name: prefect-server
+    environment:
+      PREFECT_API_URL: "http://prefect-server:4200"
+      PREFECT_SERVER_API_HOST: 0.0.0.0
+    command: prefect server start
+    ports:
+      - "4200:4200"  # Prefect Server UI
+    depends_on:
+      - postgres
+    networks:
+      - iceberg_net
+  
+  # SFTPGo for SFTP server
+  sftpgo:
+    image: drakkan/sftpgo:latest
+    container_name: sftpgo
+    ports:
+      - "2022:2022"
+    environment:
+      SFTPGO_SFTPD_BINDINGS__0__PORT: 2022
+      SFTPGO_DEFAULT_ADMIN_PASSWORD: "admin"
+      SFTPGO_DEFAULT_ADMIN_USERNAME: "admin"
+    volumes:
+      - ./sftpgo_data:/var/lib/sftpgo/data
+      - ./sftpgo_storage:/var/lib/sftpgo/storage
+      - minio-data:/data
+    networks:
+      - iceberg_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    networks:
+      iceberg_net:
+        aliases:
+            - raw.minio
+            - table.minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_DOMAIN=minio
+    volumes:
+      - minio-data:/data
+    ports:
+      - 9001:9001
+      - 9000:9000
+    command: ["server", "/data", "--console-address", ":9001"]
+    depends_on:
+      - starter-kit
+
+  mc:
+    depends_on:
+      - minio
+    image: minio/mc
+    container_name: mc
+    networks:
+      - iceberg_net
+    environment:
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_REGION=us-east-1
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    networks:
+      - iceberg_net
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  starter-kit:
+    build:
+      context: .
+      dockerfile: starter-kit.dockerfile
+    volumes:
+      - ./scripts:/app
+    depends_on:
+      - postgres
+    networks:
+      - iceberg_net
+
+  raw-catalog:
+    build:
+      context: .
+      dockerfile: rest-catalog.dockerfile
+    container_name: raw-catalog
+    restart: always
+    environment:
+      CATALOG_NAME: RAW
+      WAREHOUSE_LOCATION: s3a://raw/wh
+      IMPL: org.apache.iceberg.JDBC_JdbcCatalog
+      REST_PORT: 8181
+      IO_IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      S3_ENDPOINT: http://minio:9000
+      URI: jdbc:postgresql://postgres:5432/catalog_raw
+      JDBC_USER: postgres
+      JDBC_PASSWORD: postgres
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_REGION: us-east-1
+    ports:
+      - "8181:8181"
+    depends_on:
+      - postgres
+      - minio
+      - starter-kit
+    networks:
+      - iceberg_net
+
+  table-catalog:
+    build:
+      context: .
+      dockerfile: rest-catalog.dockerfile
+    container_name: table-catalog
+    restart: always
+    environment:
+      CATALOG_NAME: TABLE
+      WAREHOUSE_LOCATION: s3a://table/wh
+      IMPL: org.apache.iceberg.JDBC_JdbcCatalog
+      REST_PORT: 8182
+      IO_IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      S3_ENDPOINT: http://minio:9000
+      URI: jdbc:postgresql://postgres:5432/catalog_table
+      JDBC_USER: postgres
+      JDBC_PASSWORD: postgres
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_REGION: us-east-1
+    ports:
+      - "8182:8182"
+    depends_on:
+      - postgres
+      - minio
+      - starter-kit
+    networks:
+      - iceberg_net
+
+volumes:
+  minio-data:
+  postgres-data:
+
+networks:
+  iceberg_net:
