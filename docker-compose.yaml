@@ -20,10 +20,17 @@ services:
     container_name: sftpgo
     ports:
       - "2022:2022"
+
     environment:
       SFTPGO_SFTPD_BINDINGS__0__PORT: 2022
       SFTPGO_DEFAULT_ADMIN_PASSWORD: "admin"
       SFTPGO_DEFAULT_ADMIN_USERNAME: "admin"
+      SFTPGO_DATA_PROVIDER__DRIVER: postgresql
+      SFTPGO_DATA_PROVIDER__NAME: "sftpgo.db"
+      SFTPGO_DATA_PROVIDER__HOST: localhost
+      SFTPGO_DATA_PROVIDER__PORT: 9001
+      SFTPGO_DATA_PROVIDER__USERNAME: minioadmin
+      SFTPGO_DATA_PROVIDER__PASSWORD: minioadmin
     volumes:
       - ./sftpgo_data:/var/lib/sftpgo/data
       - ./sftpgo_storage:/var/lib/sftpgo/storage
