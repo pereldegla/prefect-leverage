@@ -178,3 +178,4 @@ volumes:
 
 networks:
   iceberg_net:
+    driver: bridge
