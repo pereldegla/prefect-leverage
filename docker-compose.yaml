@@ -92,7 +92,7 @@ services:
   
   starter-kit:
     build:
-      context: .
+      context: ./images
       dockerfile: starter-kit.dockerfile
     volumes:
       - ./scripts:/app
@@ -103,7 +103,7 @@ services:
 
   raw-catalog:
     build:
-      context: .
+      context: ./images
       dockerfile: rest-catalog.dockerfile
     container_name: raw-catalog
     restart: always
@@ -131,7 +131,7 @@ services:
 
   table-catalog:
     build:
-      context: .
+      context: ./images
       dockerfile: rest-catalog.dockerfile
     container_name: table-catalog
     restart: always
@@ -156,6 +156,21 @@ services:
       - starter-kit
     networks:
       - iceberg_net
+
+  development:
+    build:
+      context: ./images
+      dockerfile: python-dev.dockerfile
+    container_name: development
+    command: /bin/bash -c "while true; do echo 'Hit CTRL+C'; sleep 1; done"
+    volumes:
+      - C:/Users/perel/dev-corner/prefect-leverage:/workspace
+    networks:
+      iceberg_net:
+    links:
+      - "raw-catalog:raw-catalog"
+      - "table-catalog:table-catalog"
+      - "minio:minio"
 
 volumes:
   minio-data:
