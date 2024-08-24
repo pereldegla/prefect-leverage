@@ -20,17 +20,18 @@ services:
     container_name: sftpgo
     ports:
       - "2022:2022"
+      - "8080:8080"
 
     environment:
-      SFTPGO_SFTPD_BINDINGS__0__PORT: 2022
-      SFTPGO_DEFAULT_ADMIN_PASSWORD: "admin"
-      SFTPGO_DEFAULT_ADMIN_USERNAME: "admin"
-      SFTPGO_DATA_PROVIDER__DRIVER: postgresql
-      SFTPGO_DATA_PROVIDER__NAME: "sftpgo.db"
-      SFTPGO_DATA_PROVIDER__HOST: localhost
-      SFTPGO_DATA_PROVIDER__PORT: 9001
-      SFTPGO_DATA_PROVIDER__USERNAME: minioadmin
-      SFTPGO_DATA_PROVIDER__PASSWORD: minioadmin
+      SFTPGO_SFTPD_BINDINGS__0__PORT: 8080
+      SFTPGO_HTTPD__BINDINGS__0__ADDRESS: 0.0.0.0
+      SFTPGO_ADMIN__USERNAME: admin
+      SFTPGO_ADMIN__PASSWORD: admin
+      SFTPGO_ADMIN__ENABLE_HTTP: true
+      SFTPGO_S3_ENDPOINT: http://minio:9000           # Use this for MinIO
+      SFTPGO_S3_ACCESS_KEY_ID: minioadmin
+      SFTPGO_S3_SECRET_ACCESS_KEY: minioadmin
+      SFTPGO_S3_FORCE_PATH_STYLE: true  
     volumes:
       - ./sftpgo_data:/var/lib/sftpgo/data
       - ./sftpgo_storage:/var/lib/sftpgo/storage
@@ -44,6 +45,7 @@ services:
     networks:
       iceberg_net:
         aliases:
+            - landing.minio
             - raw.minio
             - table.minio
     environment:
