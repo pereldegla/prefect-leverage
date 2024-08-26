@@ -1,5 +1,5 @@
 
-# Dev Toolkit
+# Leverage Prefect SFTP Go 
 
 To help developer to have all stack in local, we provide a docker-compose.yaml file with :
 
@@ -14,5 +14,4 @@ To use it, go to dev-toolkit folder and run :
 docker compose up -d --build
 ````
 prefect config set PREFECT_API_URL=http://prefect-server:4200/api
-
 You need to install Docker Desktop before !
