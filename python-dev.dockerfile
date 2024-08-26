@@ -2,7 +2,7 @@ FROM python:3.11.4-slim-bullseye
 USER root
 
 # Add Dependencies for PySpark
-RUN apt-get update  && apt install git-all
+RUN apt-get update
 COPY requirements.txt /packages/requirements.txt
 
 WORKDIR /packages
