@@ -4,3 +4,4 @@ pandas==2.2.0
 minio==7.2.4
 prefect==2.14.15
 psycopg2-binary==2.9.9
+faker==28.4.1

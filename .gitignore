@@ -1,2 +1,4 @@
 /sftpgo_data
 /sftpgo_storage
+.env
+/env

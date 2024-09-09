@@ -62,6 +62,14 @@ services:
     command: ["server", "/data", "--console-address", ":9001"]
     depends_on:
       - starter-kit
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      iceberg_net:
+        ipv4_address: 172.18.0.9
 
   mc:
     depends_on:
@@ -131,7 +139,8 @@ services:
       - minio
       - starter-kit
     networks:
-      - iceberg_net
+      iceberg_net:
+        ipv4_address: 172.18.0.10
 
   table-catalog:
     build:
@@ -159,7 +168,9 @@ services:
       - minio
       - starter-kit
     networks:
-      - iceberg_net
+      iceberg_net:
+        ipv4_address: 172.18.0.5
+      
 
   development:
     build:
