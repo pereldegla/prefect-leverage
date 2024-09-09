@@ -33,12 +33,12 @@ def read_csv(filename: str = "employees.csv"):
     df = pd.read_csv(data)
     return df
 
-@task(log_prints=True)
-def add(x, y):
-    return x + y
+@task(name="Count Employees",log_prints=True)
+def count(employees_df: pd.DataFrame):
+    return  employees_df.groupby('Department').size().reset_index(name='EmployeeCount')
 
 @task(log_prints=True)
-def multiply(x, y):
+def write_to_minio(x, y):
     return x * y
 
 @flow(log_prints=True)
