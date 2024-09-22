@@ -6,7 +6,10 @@ services:
     environment:
       PREFECT_SERVER_API_HOST: prefect-server
       PREFECT_SERVER_ANALYTICS_ENABLED: False
+      #PREFECT_API_DATABASE_CONNECTION_URL: postgresql://postgres:postgres@postgres:5432/postgres # Use this for Postgres
+      #PREFECT_API_DATABASE_CONNECTION_URL: sqlite+aiosqlite:///home/.prefect/prefect.db::memory:?cache=shared&uri=true&check_same_thread=false # Use this for SQLite default in-memory database
     command: prefect server start
+    #command: /bin/sh -c "pip install psycopg2-binary &&  prefect server start" # Use this for Postgres
     ports:
       - "4200:4200"  # Prefect Server UI
     depends_on:
@@ -14,6 +17,8 @@ services:
         condition: service_started
     networks:
       - iceberg_net
+    volumes:
+      - prefect-data:/home/.prefect
   
   # SFTPGo for SFTP server
   sftpgo:
@@ -202,6 +207,7 @@ volumes:
   minio-data:
   postgres-data:
   sftpgo_config:
+  prefect-data:
 networks:
   iceberg_net:
     driver: bridge
